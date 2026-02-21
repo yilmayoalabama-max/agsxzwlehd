@@ -101,8 +101,9 @@
             box-shadow: 0 0 50px rgba(139, 92, 246, 0.5);
         }
 
-        .view { display: none; width: 100%; height: 100%; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease; }
+        .view { display: none; width: 100%; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease; }
         .view.active { display: flex; opacity: 1; }
+        #intro-view { min-height: calc(100vh - 80px); overflow-y: auto; }
         
         .calendar-controls {
             display: flex;
@@ -245,6 +246,11 @@
             position: relative;
             transition: background 0.2s ease;
             background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 3px;
+            overflow: visible;
         }
 
         .time-cell:hover {
@@ -283,6 +289,15 @@
             border: 1px solid rgba(255,255,255,0.03);
         }
 
+        .month-cell.selected-day {
+            background: rgba(139, 92, 246, 0.12);
+            box-shadow: inset 0 0 0 1.5px rgba(139, 92, 246, 0.5);
+        }
+
+        .month-cell.selected-day .month-cell-date {
+            color: #c4b5fd;
+        }
+
         .month-cell:hover {
             background: rgba(139, 92, 246, 0.08);
         }
@@ -314,41 +329,319 @@
 
         .month-event {
             font-size: 10px;
-            padding: 4px 8px;
-            background: linear-gradient(135deg, #7c3aed, #4c1d95);
-            border-radius: 6px;
-            margin-bottom: 3px;
+            padding: 3px 6px;
+            background: rgba(109, 40, 217, 0.55);
+            border-radius: 5px;
+            margin-bottom: 2px;
             font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-left: 2px solid #fff;
+            border-left: 2px solid rgba(196, 132, 252, 0.7);
+            backdrop-filter: blur(4px);
         }
 
         .event-node {
-            position: absolute;
-            inset: 4px;
-            background: linear-gradient(135deg, #7c3aed, #4c1d95);
-            border-left: 3px solid #fff;
-            border-radius: 8px;
-            padding: 8px;
-            font-size: 11px;
-            font-weight: 700;
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            background: rgba(109, 40, 217, 0.55);
+            border-left: 2px solid rgba(196, 132, 252, 0.7);
+            border-radius: 6px;
+            padding: 4px 7px;
+            font-size: 10px;
+            font-weight: 600;
             color: white;
             z-index: 10;
             animation: nodePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
             overflow: hidden;
-            text-overflow: ellipsis;
             cursor: pointer;
+            backdrop-filter: blur(4px);
+            box-sizing: border-box;
         }
 
         .event-node:hover {
-            background: linear-gradient(135deg, #8b5cf6, #5b21b6);
-            transform: scale(1.02);
+            background: rgba(139, 92, 246, 0.65);
+        }
+
+        .event-node.done {
+            opacity: 0.45;
+            background: rgba(80, 40, 140, 0.4);
+        }
+
+        .event-node.done .event-task-text {
+            text-decoration: line-through;
+            text-decoration-color: rgba(255,255,255,0.6);
+            text-decoration-thickness: 1.5px;
+        }
+
+        /* Satchel-style circle checkbox */
+        .event-checkbox {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.45);
+            background: transparent;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .event-checkbox:hover {
+            border-color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .event-checkbox.checked {
+            background: #a78bfa;
+            border-color: #a78bfa;
+        }
+
+        .event-checkbox.checked::after {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 6px;
+            border: 1.5px solid white;
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg) translate(-0.5px, -1px);
+        }
+
+        .event-node-inner {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .event-task-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+        }
+
+        .month-event.done {
+            opacity: 0.45;
+        }
+
+        .month-event.done .event-task-text {
+            text-decoration: line-through;
+            text-decoration-color: rgba(255,255,255,0.6);
+            text-decoration-thickness: 1.5px;
+        }
+
+        .month-event .event-checkbox {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border-width: 1.5px;
+        }
+
+        .month-event .event-checkbox.checked::after {
+            width: 2px;
+            height: 4px;
+            border-width: 1.5px;
         }
 
         @keyframes nodePop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
+
+        .word-span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            margin-right: 0.25em;
+        }
+
+        .word-span.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── WHY CARDS ── */
+        .why-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 16px;
+        }
+
+        .why-card {
+            opacity: 0;
+            transform: translateY(60px) scale(0.96);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            transition-delay: calc(var(--i) * 0.09s);
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: default;
+            isolation: isolate;
+            min-height: 200px;
+        }
+
+        .why-card.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Individual card backgrounds */
+        .why-card:nth-child(1) { background: linear-gradient(135deg, #0f0a1e 0%, #1a0533 100%); border: 1px solid rgba(139,92,246,0.2); }
+        .why-card:nth-child(2) { background: linear-gradient(135deg, #060d1f 0%, #0a1a35 100%); border: 1px solid rgba(59,130,246,0.15); }
+        .why-card:nth-child(3) { background: linear-gradient(135deg, #0d1a0a 0%, #0a2010 100%); border: 1px solid rgba(34,197,94,0.15); }
+        .why-card:nth-child(4) { background: linear-gradient(135deg, #1a0a06 0%, #2d1000 100%); border: 1px solid rgba(249,115,22,0.15); }
+        .why-card:nth-child(5) { background: linear-gradient(135deg, #0a1215 0%, #071820 100%); border: 1px solid rgba(6,182,212,0.15); }
+        .why-card:nth-child(6) { background: linear-gradient(135deg, #150a1a 0%, #1f0a2e 100%); border: 1px solid rgba(232,121,249,0.15); }
+
+        /* Big number / stat */
+        .why-card-number {
+            position: absolute;
+            bottom: -10px;
+            right: 16px;
+            font-size: 8rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.05em;
+            opacity: 0.05;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .why-card:hover .why-card-number {
+            opacity: 0.1;
+            transform: scale(1.05) translateY(-4px);
+        }
+
+        .why-card-content {
+            position: relative;
+            z-index: 2;
+            padding: 28px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .why-card-top { display: flex; flex-direction: column; gap: 14px; }
+
+        .why-card-label {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            opacity: 0.4;
+            color: white;
+        }
+
+        .why-card-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: white;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+        }
+
+        .why-card-desc {
+            font-size: 11.5px;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.75;
+            margin-top: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .why-card:hover .why-card-desc { color: rgba(255,255,255,0.6); }
+
+        .why-card-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .why-card-vs {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.3;
+            color: white;
+            transition: opacity 0.3s ease;
+        }
+
+        .why-card:hover .why-card-vs { opacity: 0.7; }
+
+        .why-card-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease, background 0.3s ease;
+        }
+
+        .why-card:hover .why-card-arrow {
+            opacity: 1;
+            transform: translateX(0);
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* Noise texture overlay */
+        .why-card-noise {
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Accent line at top */
+        .why-card-line {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            opacity: 0.6;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .why-card.visible .why-card-line {
+            transform: scaleX(1);
+            transition-delay: calc(var(--i) * 0.09s + 0.3s);
+        }
+
+        .why-card:nth-child(1) .why-card-line { background: linear-gradient(90deg, #7c3aed, #c084fc); }
+        .why-card:nth-child(2) .why-card-line { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+        .why-card:nth-child(3) .why-card-line { background: linear-gradient(90deg, #16a34a, #4ade80); }
+        .why-card:nth-child(4) .why-card-line { background: linear-gradient(90deg, #ea580c, #fb923c); }
+        .why-card:nth-child(5) .why-card-line { background: linear-gradient(90deg, #0891b2, #22d3ee); }
+        .why-card:nth-child(6) .why-card-line { background: linear-gradient(90deg, #a21caf, #e879f9); }
+
+        .why-card:nth-child(1) .why-card-number { color: #7c3aed; }
+        .why-card:nth-child(2) .why-card-number { color: #3b82f6; }
+        .why-card:nth-child(3) .why-card-number { color: #22c55e; }
+        .why-card:nth-child(4) .why-card-number { color: #f97316; }
+        .why-card:nth-child(5) .why-card-number { color: #06b6d4; }
+        .why-card:nth-child(6) .why-card-number { color: #e879f9; }
 
         .voice-btn {
             width: 56px;
@@ -398,6 +691,32 @@
             display: block;
         }
 
+        .repeat-btn {
+            padding: 6px 4px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .repeat-btn:hover {
+            background: rgba(139,92,246,0.15);
+            border-color: rgba(139,92,246,0.3);
+            color: white;
+        }
+
+        .repeat-btn.active {
+            background: rgba(139,92,246,0.25);
+            border-color: rgba(139,92,246,0.5);
+            color: #c4b5fd;
+        }
+
         .today-btn {
             padding: 8px 20px;
             border-radius: 10px;
@@ -420,7 +739,10 @@
 
     <header class="w-full py-6 px-12 glass flex justify-between items-center z-50 border-b border-white/5">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center font-black">MS</div>
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="8" width="20" height="20" rx="4.5" fill="none" stroke="#a855f7" stroke-width="2.2"/>
+                <polyline points="5,18 10.5,24 26,2" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
             <div class="text-2xl font-black tracking-tighter uppercase">MySchedule.AI</div>
         </div>
         <div id="status-chip" class="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 uppercase tracking-widest transition-all">
@@ -429,30 +751,175 @@
     </header>
 
     <main class="flex-1 relative overflow-auto">
-        <section id="intro-view" class="view active flex-col items-center justify-center text-center p-6">
-            <div class="mb-12">
-                <h1 class="text-7xl font-light text-white mb-2 tracking-tight">Your calendar, <br><strong>Perfectly Synced.</strong></h1>
-            </div>
+        <section id="intro-view" class="view active flex-col items-center text-center p-6">
+            <!-- Hero: full viewport height -->
+            <div class="flex flex-col items-center justify-center text-center" style="min-height: calc(100vh - 80px);">
+                <div class="mb-8">
+                    <h1 class="text-7xl font-light text-white mb-2 tracking-tight">Your calendar,<br><strong>Synced to</strong></h1>
+                </div>
 
-            <div class="mb-20">
-                <div class="slot-window">
-                    <div class="slot-reel" id="reel-container"></div>
+                <div class="mb-16">
+                    <div class="slot-window">
+                        <div class="slot-reel" id="reel-container"></div>
+                    </div>
+                </div>
+
+                <button id="enter-btn" onclick="transitionView('app')" class="hidden-locked bg-white text-black px-16 py-6 rounded-2xl font-black text-sm uppercase tracking-[0.3em] transition-all">
+                    Enter Dashboard
+                </button>
+
+                <!-- Scroll hint -->
+                <div id="scroll-hint" class="hidden-locked mt-12 flex flex-col items-center gap-2 text-slate-600" style="transition-delay: 0.3s;">
+                    <span class="text-[10px] uppercase tracking-widest font-bold">Why choose us</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: bounce 1.5s infinite;">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
                 </div>
             </div>
 
-            <button id="enter-btn" onclick="transitionView('app')" class="hidden-locked bg-white text-black px-16 py-6 rounded-2xl font-black text-sm uppercase tracking-[0.3em] transition-all">
-                Enter Dashboard
-            </button>
+            <!-- Why choose us -->
+            <div id="why-us" class="hidden-locked w-full max-w-5xl pb-24 px-4" style="transition-delay: 0.15s;">
+                
+                <!-- Word-by-word reveal heading -->
+                <div class="mb-16 text-left">
+                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-6">Why choose us?</p>
+                    <h2 id="reveal-text" class="text-5xl font-black text-white leading-tight tracking-tight"></h2>
+                </div>
+
+                <!-- Cards -->
+                <div class="why-grid" id="why-cards">
+
+                    <div class="why-card" style="--i:0">
+                        <div class="why-card-line"></div>
+                        <div class="why-card-noise"></div>
+                        <div class="why-card-number">01</div>
+                        <div class="why-card-content">
+                            <div class="why-card-top">
+                                <span class="why-card-label">Input</span>
+                                <div class="why-card-title">Speak it.<br>Done.</div>
+                                <div class="why-card-desc">Natural language and voice input mean your schedule is set before Google Calendar's form has even loaded.</div>
+                            </div>
+                            <div class="why-card-bottom">
+                                <span class="why-card-vs">vs Google Calendar</span>
+                                <div class="why-card-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="why-card" style="--i:1">
+                        <div class="why-card-line"></div>
+                        <div class="why-card-noise"></div>
+                        <div class="why-card-number">02</div>
+                        <div class="why-card-content">
+                            <div class="why-card-top">
+                                <span class="why-card-label">Intelligence</span>
+                                <div class="why-card-title">One sentence.<br>Full week.</div>
+                                <div class="why-card-desc">Describe your entire week in plain text and watch it populate in seconds. No other app thinks like you do.</div>
+                            </div>
+                            <div class="why-card-bottom">
+                                <span class="why-card-vs">vs Notion & Todoist</span>
+                                <div class="why-card-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="why-card" style="--i:2">
+                        <div class="why-card-line"></div>
+                        <div class="why-card-noise"></div>
+                        <div class="why-card-number">03</div>
+                        <div class="why-card-content">
+                            <div class="why-card-top">
+                                <span class="why-card-label">Recurrence</span>
+                                <div class="why-card-title">Set once.<br>Forever.</div>
+                                <div class="why-card-desc">Gym every day for a year — two words. Not buried in settings dialogs like every other calendar app.</div>
+                            </div>
+                            <div class="why-card-bottom">
+                                <span class="why-card-vs">vs Fantastical</span>
+                                <div class="why-card-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="why-card" style="--i:3">
+                        <div class="why-card-line"></div>
+                        <div class="why-card-noise"></div>
+                        <div class="why-card-number">04</div>
+                        <div class="why-card-content">
+                            <div class="why-card-top">
+                                <span class="why-card-label">Completion</span>
+                                <div class="why-card-title">Tick it off.<br>Feel it.</div>
+                                <div class="why-card-desc">Check tasks directly on your calendar with a satisfying click. Google Calendar has never understood the difference between an event and a task.</div>
+                            </div>
+                            <div class="why-card-bottom">
+                                <span class="why-card-vs">vs Any To-Do App</span>
+                                <div class="why-card-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="why-card" style="--i:4">
+                        <div class="why-card-line"></div>
+                        <div class="why-card-noise"></div>
+                        <div class="why-card-number">05</div>
+                        <div class="why-card-content">
+                            <div class="why-card-top">
+                                <span class="why-card-label">Focus</span>
+                                <div class="why-card-title">Nothing else.<br>Just you.</div>
+                                <div class="why-card-desc">No ads. No suggested events. No noise. Just your schedule, rendered beautifully. Pure, uninterrupted focus.</div>
+                            </div>
+                            <div class="why-card-bottom">
+                                <span class="why-card-vs">vs All of Them</span>
+                                <div class="why-card-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="why-card" style="--i:5">
+                        <div class="why-card-line"></div>
+                        <div class="why-card-noise"></div>
+                        <div class="why-card-number">06</div>
+                        <div class="why-card-content">
+                            <div class="why-card-top">
+                                <span class="why-card-label">Design</span>
+                                <div class="why-card-title">Built for<br>perfection.</div>
+                                <div class="why-card-desc">Every pixel considered. Every interaction deliberate. A calendar that respects your time — visually and functionally.</div>
+                            </div>
+                            <div class="why-card-bottom">
+                                <span class="why-card-vs">vs Apple Calendar</span>
+                                <div class="why-card-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </section>
 
         <section id="app-view" class="view p-8 gap-8" style="height: calc(100vh - 100px);">
-            <div class="w-1/4 glass rounded-[3rem] p-10 flex flex-col gap-6 border border-white/5 h-full">
+            <div class="w-1/4 glass rounded-[3rem] p-8 flex flex-col gap-5 border border-white/5 h-full overflow-y-auto">
                 <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest">Natural Intelligence</h3>
+
+                <div id="context-date-chip" class="flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-2xl px-4 py-2 text-xs font-bold text-purple-300">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span id="context-date-label">Scheduling for today</span>
+                </div>
                 
-                <textarea id="userInput" class="flex-1 bg-black/40 border border-white/5 rounded-3xl p-6 text-sm text-white outline-none focus:border-purple-500/30 transition-all resize-none" placeholder="Type or speak: 'Monday: Gym at 6am, Team meeting at 10am. Tuesday: Client call at 2pm...'"></textarea>
+                <textarea id="userInput" class="flex-1 bg-black/40 border border-white/5 rounded-3xl p-6 text-sm text-white outline-none focus:border-purple-500/30 transition-all resize-none" placeholder="e.g. 'Gym at 7am' or 'Team meeting at 10am, lunch at 1pm'"></textarea>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Repeat</label>
+                    <div class="grid grid-cols-3 gap-1.5" id="repeat-options">
+                        <button class="repeat-btn active" data-repeat="none">None</button>
+                        <button class="repeat-btn" data-repeat="daily">Daily</button>
+                        <button class="repeat-btn" data-repeat="weekly">Weekly</button>
+                        <button class="repeat-btn" data-repeat="weekdays">Weekdays</button>
+                        <button class="repeat-btn" data-repeat="monthly">Monthly</button>
+                        <button class="repeat-btn" data-repeat="yearly">Yearly</button>
+                    </div>
+                </div>
                 
                 <div class="flex items-center justify-between gap-3">
-                    <button id="syncBtn" class="flex-1 bg-purple-600 py-6 rounded-3xl font-black uppercase text-xs shadow-xl hover:bg-purple-500 transition-all active:scale-95">Sync Schedule</button>
+                    <button id="syncBtn" class="flex-1 bg-purple-600 py-5 rounded-3xl font-black uppercase text-xs shadow-xl hover:bg-purple-500 transition-all active:scale-95">Sync Schedule</button>
                     <button id="voiceBtn" class="voice-btn">
                         <span class="voice-status">Listening...</span>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
@@ -494,13 +961,33 @@
 
     <script>
         // INTEGRATED: Your new API Key and Model details
-        const GROQ_KEY = "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";
+        const GROQ_KEY = "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";
         const MODEL = "llama-3.3-70b-versatile";
 
         let currentView = 'day';
         let currentDate = new Date();
         let scheduleData = [];
         let recognition = null;
+        let selectedRepeat = 'none';
+        let completedEvents = new Set(JSON.parse(localStorage.getItem('myschedule_completed') || '[]'));
+
+        function updateContextChip() {
+            const label = document.getElementById('context-date-label');
+            if (!label) return;
+            const today = new Date();
+            const isToday = isSameDay(currentDate, today);
+            label.textContent = isToday ? 'Scheduling for today' : `${DAYS_SHORT[currentDate.getDay()]} ${currentDate.getDate()} ${MONTHS[currentDate.getMonth()]}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.repeat-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.repeat-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedRepeat = btn.dataset.repeat;
+                };
+            });
+        });
 
         const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -554,8 +1041,11 @@
             
             setTimeout(() => {
                 document.getElementById('enter-btn').classList.add('unlocked');
+                document.getElementById('why-us').classList.add('unlocked');
+                document.getElementById('scroll-hint').classList.add('unlocked');
                 updateStatus("System: Ready", "green");
                 loadLocalData();
+                initWhyUsAnimations();
             }, 6400);
 
             document.getElementById('userInput').addEventListener('keydown', (e) => {
@@ -585,6 +1075,7 @@
             else if (currentView === 'week') renderWeekView();
             else if (currentView === 'month') renderMonthView();
             updateCalendarTitle();
+            updateContextChip();
             renderEvents();
         }
 
@@ -650,13 +1141,25 @@
                 const isToday = isSameDay(currentDay, today);
                 const dateStr = formatDate(currentDay);
                 
-                html += `<div class="month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" data-date="${dateStr}">
+                html += `<div class="month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" data-date="${dateStr}" onclick="selectDayFromMonth('${dateStr}')">
                     <div class="month-cell-date">${currentDay.getDate()}</div>
                     <div class="month-events" id="month-${dateStr}"></div>
                 </div>`;
                 currentDay.setDate(currentDay.getDate() + 1);
             }
             cal.innerHTML = html;
+        }
+
+        function selectDayFromMonth(dateStr) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            currentDate = new Date(y, m - 1, d);
+
+            // Highlight selected cell
+            document.querySelectorAll('.month-cell').forEach(el => el.classList.remove('selected-day'));
+            const cell = document.querySelector(`.month-cell[data-date="${dateStr}"]`);
+            if (cell) cell.classList.add('selected-day');
+
+            updateContextChip();
         }
 
         function switchCalendarView(view) {
@@ -714,6 +1217,9 @@
             }
             updateStatus("System: Syncing...", "purple");
 
+            const viewedDateStr = currentDate.toDateString();
+            const viewedDateISO = formatDate(currentDate);
+
             try {
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
@@ -726,7 +1232,7 @@
                         messages: [
                             { 
                                 role: "system", 
-                                content: `You are a calendar scheduling AI. Today's date is ${new Date().toDateString()}. Parse natural language and return ONLY valid JSON with this structure:
+                                content: `You are a calendar scheduling AI. Today's date is ${new Date().toDateString()}. The user is currently viewing ${viewedDateStr}. If the user writes a task without specifying a date (e.g. "gym at 7am"), schedule it on the viewed date: ${viewedDateISO}. If they specify a day name or date, use that instead. Return ONLY valid JSON:
 {
   "schedule": [
     {
@@ -736,8 +1242,8 @@
     }
   ]
 }
-
 Rules:
+- If no date mentioned, use ${viewedDateISO}
 - Parse day names relative to this week
 - Convert 12-hour to 24-hour
 - Keep task descriptions under 30 characters
@@ -756,12 +1262,18 @@ Rules:
                 const content = JSON.parse(data.choices[0].message.content);
                 
                 if (content.schedule && Array.isArray(content.schedule)) {
-                    // APPEND: Merging new events with existing data
-                    scheduleData = [...scheduleData, ...content.schedule];
+                    let newEvents = content.schedule;
+
+                    // Expand recurring events
+                    if (selectedRepeat !== 'none') {
+                        newEvents = expandRecurring(newEvents, selectedRepeat);
+                    }
+
+                    scheduleData = [...scheduleData, ...newEvents];
                     saveLocalData(scheduleData);
                     renderEvents();
                     updateStatus("System: Optimized", "green");
-                    document.getElementById('userInput').value = ""; // Clear input on success
+                    document.getElementById('userInput').value = "";
                 } else {
                     throw new Error('Invalid response format');
                 }
@@ -772,7 +1284,197 @@ Rules:
             }
         }
 
+        function expandRecurring(events, repeat) {
+            const expanded = [];
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + 2); // expand 2 years out
+
+            events.forEach(ev => {
+                const start = new Date(ev.date);
+                let cursor = new Date(start);
+
+                while (cursor <= endDate) {
+                    expanded.push({ date: formatDate(cursor), hour: ev.hour, task: ev.task, recurring: repeat });
+
+                    if (repeat === 'daily') {
+                        cursor.setDate(cursor.getDate() + 1);
+                    } else if (repeat === 'weekly') {
+                        cursor.setDate(cursor.getDate() + 7);
+                    } else if (repeat === 'weekdays') {
+                        do { cursor.setDate(cursor.getDate() + 1); } while (cursor.getDay() === 0 || cursor.getDay() === 6);
+                    } else if (repeat === 'monthly') {
+                        cursor.setMonth(cursor.getMonth() + 1);
+                    } else if (repeat === 'yearly') {
+                        cursor.setFullYear(cursor.getFullYear() + 1);
+                    } else {
+                        break;
+                    }
+                }
+            });
+            return expanded;
+        }
+
         document.getElementById('syncBtn').onclick = syncSchedule;
+
+        function createEventNode(event, className, titlePrefix) {
+            const eventKey = `${event.date}-${event.hour}-${event.task}`;
+            const isDone = completedEvents.has(eventKey);
+            const node = document.createElement('div');
+            node.className = `${className}${isDone ? ' done' : ''}`;
+            node.title = titlePrefix ? `${titlePrefix} - ${event.task}` : event.task;
+            node.dataset.eventKey = eventKey;
+
+            const inner = document.createElement('div');
+            inner.className = 'event-node-inner';
+
+            const checkbox = document.createElement('div');
+            checkbox.className = `event-checkbox${isDone ? ' checked' : ''}`;
+            checkbox.onclick = (e) => {
+                e.stopPropagation();
+                toggleEventDone(node, checkbox, eventKey);
+            };
+
+            const text = document.createElement('span');
+            text.className = 'event-task-text';
+            text.textContent = event.task;
+
+            inner.appendChild(checkbox);
+            inner.appendChild(text);
+            node.appendChild(inner);
+            return node;
+        }
+
+        // --- Sound & Celebration ---
+        function playCheckSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(780, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+
+        function launchConfetti() {
+            // Elegant particle burst — not raining confetti, just a soft radial burst from center
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const colors = ['#a855f7','#c084fc','#7c3aed','#e879f9','#818cf8','#ffffff'];
+
+            const particles = Array.from({length: 60}, (_, i) => {
+                const angle = (Math.PI * 2 / 60) * i + (Math.random() - 0.5) * 0.3;
+                const speed = Math.random() * 5 + 3;
+                return {
+                    x: cx, y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2,
+                    r: Math.random() * 3 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    opacity: 1,
+                    gravity: 0.12
+                };
+            });
+
+            let frame = 0;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += p.gravity;
+                    p.vx *= 0.98;
+                    p.opacity = Math.max(0, 1 - frame / 90);
+                    ctx.save();
+                    ctx.globalAlpha = p.opacity;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+                frame++;
+                if (frame < 90) requestAnimationFrame(draw);
+                else canvas.remove();
+            }
+            draw();
+
+            // Sleek all-done toast — bottom center, slides up
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 40px;
+                left: 50%;
+                transform: translateX(-50%) translateY(20px);
+                opacity: 0;
+                background: rgba(15, 8, 30, 0.92);
+                border: 1px solid rgba(168, 85, 247, 0.3);
+                border-radius: 100px;
+                padding: 14px 28px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                z-index: 10000;
+                backdrop-filter: blur(24px);
+                transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+                box-shadow: 0 8px 40px rgba(139, 92, 246, 0.2);
+            `;
+            toast.innerHTML = `
+                <div style="width:6px;height:6px;border-radius:50%;background:#a855f7;box-shadow:0 0 8px #a855f7;"></div>
+                <span style="font-size:13px;font-weight:700;color:white;letter-spacing:-0.01em;">All tasks complete</span>
+                <span style="font-size:13px;color:rgba(255,255,255,0.3);font-weight:500;">You crushed it.</span>
+            `;
+            document.body.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.style.transform = 'translateX(-50%) translateY(0)';
+                    toast.style.opacity = '1';
+                });
+            });
+
+            setTimeout(() => {
+                toast.style.transform = 'translateX(-50%) translateY(10px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        function checkAllDone() {
+            const dateStr = formatDate(currentDate);
+            const todayEvents = scheduleData.filter(e => e.date === dateStr);
+            if (todayEvents.length === 0) return;
+            const allDone = todayEvents.every(e => completedEvents.has(`${e.date}-${e.hour}-${e.task}`));
+            if (allDone) launchConfetti();
+        }
+
+        function toggleEventDone(node, checkbox, eventKey) {
+            if (completedEvents.has(eventKey)) {
+                completedEvents.delete(eventKey);
+                node.classList.remove('done');
+                checkbox.classList.remove('checked');
+            } else {
+                completedEvents.add(eventKey);
+                node.classList.add('done');
+                checkbox.classList.add('checked');
+                playCheckSound();
+                setTimeout(checkAllDone, 300);
+            }
+            localStorage.setItem('myschedule_completed', JSON.stringify([...completedEvents]));
+        }
 
         function renderEvents() {
             document.querySelectorAll('.event-node').forEach(el => el.remove());
@@ -784,11 +1486,7 @@ Rules:
                 if (currentView === 'day' && isSameDay(eventDate, currentDate)) {
                     const container = document.getElementById(`day-${event.hour}-0`);
                     if (container) {
-                        const node = document.createElement('div');
-                        node.className = 'event-node';
-                        node.textContent = event.task;
-                        node.title = event.task;
-                        container.appendChild(node);
+                        container.appendChild(createEventNode(event, 'event-node', ''));
                     }
                 } else if (currentView === 'week') {
                     const startOfWeek = new Date(currentDate);
@@ -798,22 +1496,14 @@ Rules:
                     if (dayIndex >= 0 && dayIndex < 7) {
                         const container = document.getElementById(`week-${event.hour}-${dayIndex}`);
                         if (container) {
-                            const node = document.createElement('div');
-                            node.className = 'event-node';
-                            node.textContent = event.task;
-                            node.title = event.task;
-                            container.appendChild(node);
+                            container.appendChild(createEventNode(event, 'event-node', ''));
                         }
                     }
                 } else if (currentView === 'month') {
                     const dateStr = formatDate(eventDate);
                     const container = document.getElementById(`month-${dateStr}`);
                     if (container) {
-                        const node = document.createElement('div');
-                        node.className = 'month-event';
-                        node.textContent = event.task;
-                        node.title = `${event.hour}:00 - ${event.task}`;
-                        container.appendChild(node);
+                        container.appendChild(createEventNode(event, 'month-event', `${event.hour}:00`));
                     }
                 }
             });
@@ -865,12 +1555,40 @@ Rules:
         function clearSchedule() {
             if(confirm("Wipe all scheduled events?")) {
                 scheduleData = [];
+                completedEvents = new Set();
                 localStorage.removeItem('myschedule_ai_backup');
+                localStorage.removeItem('myschedule_completed');
                 document.querySelectorAll('.event-node').forEach(el => el.remove());
                 document.querySelectorAll('.month-event').forEach(el => el.remove());
                 document.getElementById('userInput').value = "";
                 updateStatus("System: Cleared", "slate");
             }
+        }
+
+        function initWhyUsAnimations() {
+            const heading = "Not just a calendar. A scheduling superpower that thinks the way you do.";
+            const el = document.getElementById('reveal-text');
+            el.innerHTML = heading.split(' ').map(w => `<span class="word-span">${w}</span>`).join('');
+
+            const wordObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.querySelectorAll('.word-span').forEach((w, i) => {
+                            setTimeout(() => w.classList.add('visible'), i * 75);
+                        });
+                        wordObserver.disconnect();
+                    }
+                });
+            }, { threshold: 0.3 });
+            wordObserver.observe(el);
+
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.why-card').forEach(card => cardObserver.observe(card));
         }
 
         function isSameDay(d1, d2) {
